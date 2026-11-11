@@ -9,3 +9,4 @@ overlay.png
 *.jpg
 *.jpeg
 .env
+__pycache__/
