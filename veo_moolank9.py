@@ -18,6 +18,14 @@ It makes 5 clips of 8 sec each (clip_1.mp4 ... clip_5.mp4) and, if ffmpeg is
 installed, joins them into moolank9_final.mp4, then adds the text overlays and
 logo -> moolank9_branded.mp4.
 
+USING GOOGLE FLOW INSTEAD (labs.google/flow, no API key needed):
+    python veo_moolank9.py my_photo.jpg --flow
+This writes my_photo_9x16.jpg and prints the 5 prompts. In Flow, use
+"Frames to Video" with that photo as the first frame, 9:16, one prompt per
+clip, and download them as clip_1.mp4 ... clip_5.mp4 into this folder. Then run
+    python veo_moolank9.py my_photo.jpg --logo lavish_astro_logo.png
+and it joins them and adds the overlays (no API key needed when all 5 exist).
+
 Re-running skips clips that already exist, so a failed clip can be retried
 without paying for the others again. To only redo the overlays:
     python veo_moolank9.py my_photo.jpg --logo lavish_astro_logo.png --overlay-only
@@ -291,6 +299,8 @@ def main():
     ap.add_argument("photo", help="your photo (JPG/PNG)")
     ap.add_argument("--logo", help="Lavish Astro logo, ideally a transparent PNG")
     ap.add_argument("--font", help="font file with Hindi letters (auto-detected if omitted)")
+    ap.add_argument("--flow", action="store_true",
+                    help="print the 5 prompts + make the 9:16 photo for Google Flow, then stop")
     ap.add_argument("--overlay-only", action="store_true",
                     help=f"skip video generation, just add overlays to an existing {JOINED}")
     args = ap.parse_args()
@@ -298,16 +308,28 @@ def main():
     for f in (args.photo, args.logo):
         if f and not os.path.exists(f):
             sys.exit(f"File not found: {f}")
+
+    if args.flow:
+        crop_to_vertical(args.photo)
+        for i in range(len(LINES)):
+            print(f"\n----- clip_{i + 1}.mp4 -----\n{make_prompt(i)}")
+        return
+
     if args.logo is None:
         print("Note: no --logo given, the video will have text overlays only.")
-
+    clip_names = [f"clip_{i + 1}.mp4" for i in range(len(LINES))]
     if args.overlay_only:
         if not os.path.exists(JOINED):
             sys.exit(f"{JOINED} not found - run without --overlay-only first.")
         joined = JOINED
+    elif all(os.path.exists(c) for c in clip_names):
+        print("All 5 clips found - joining them (no generation needed).")
+        joined = join_clips(clip_names)
     else:
         if not os.environ.get("GEMINI_API_KEY"):
-            sys.exit("Please set GEMINI_API_KEY first.")
+            missing = ", ".join(c for c in clip_names if not os.path.exists(c))
+            sys.exit(f"Missing {missing}. Set GEMINI_API_KEY to generate them, "
+                     "or make them in Google Flow (see --flow).")
         client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
         image = load_image(args.photo)
         clips = [generate_clip(client, image, i) for i in range(len(LINES))]
