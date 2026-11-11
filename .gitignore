@@ -1,0 +1,11 @@
+# generated files
+clip_*.mp4
+clips.txt
+moolank9_final.mp4
+moolank9_branded.mp4
+overlay.png
+*_9x16.jpg
+# keep personal photos and keys out of this public repo
+*.jpg
+*.jpeg
+.env
