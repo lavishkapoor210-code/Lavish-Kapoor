@@ -77,7 +77,10 @@ export interface Scene {
   transition?: string;
   subtitle?: string;
   referenceAssets?: string[];
+  shotType?: "presenter" | "b-roll" | "graphic";
   audioSource?: "flow" | "tts";
+  /** narration no longer matches the script word-for-word (a human edit) */
+  narrationEdited?: boolean;
   takes: SceneFile[];
   selectedTake?: string;
   voice: SceneFile[];
@@ -104,7 +107,13 @@ export interface ProjectManifest {
   createdAt: string;
   updatedAt: string;
   script: { file?: string; approval: ApprovalState };
-  storyboard: { approval: ApprovalState };
+  storyboard: {
+    approval: ApprovalState;
+    version?: number;
+    source?: "claude" | "import" | "edit";
+    file?: string;
+    updatedAt?: string;
+  };
   referenceImages: string[];
   scenes: Scene[];
   renders: SceneFile[];
