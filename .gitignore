@@ -10,3 +10,9 @@ overlay.png
 *.jpeg
 .env
 __pycache__/
+
+# project media and shared asset libraries (personal photos, generated clips)
+/projects/
+/library/
+node_modules/
+.next/
